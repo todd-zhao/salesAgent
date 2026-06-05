@@ -3,7 +3,12 @@
  * Agent 基类
  * ============================================
  * 所有销售专家 Agent 继承此类。
- * 每个 Agent 绑定一个 Qdrant Collection 作为知识库。
+ * 每个 Agent 绑定一个知识库 Collection。
+ *
+ * 安全设计：
+ * - 知识库内容仅供 LLM 内部参考，不向用户透露原文
+ * - 回答必须用通俗语言转述，禁止引用术语或原文
+ * - API 返回中不包含知识库原文内容
  */
 
 import { createDeepSeekChat } from '../llm/deepseek.js';
@@ -11,20 +16,26 @@ import qdrantStore from '../vectorstore/qdrant-client.js';
 import { app } from '../config/index.js';
 
 /**
- * @typedef {Object} AgentContext
- * @property {string} sessionId - 会话 ID
- * @property {Object} userContext - 用户上下文（行业、角色、场景等）
- * @property {Array} chatHistory - 对话历史
- * @property {Object} [otherAgentOutputs] - 其他 Agent 的输出
+ * 全局安全与风格规则 — 追加到每个 Agent 的 system prompt 末尾
  */
+const COMMON_RESPONSE_RULES = `
+## 回答规则（必须遵守）
 
-/**
- * @typedef {Object} AgentResult
- * @property {string} agentName - Agent 标识
- * @property {string} output - 文本输出
- * @property {Array} knowledgeRefs - 知识引用 [{source, score, content}]
- * @property {Object} metadata - 附加元数据
- */
+### 风格要求
+1. **简洁**：回答控制在 3-5 句话以内，用短句，不要长篇大论
+2. **通俗**：用大白话，不使用知识库中的专业术语或方法论名称
+3. **直接**：直接回答用户问题，不要铺垫和总结
+
+### 安全要求（重要）
+1. **不准透露原文**：基于知识库内容作答，但禁止逐字引用知识库原文
+2. **不准暴露来源**：不要告诉用户"根据XX方法论"、"知识库中提及"等
+3. **不准输出元数据**：不要提及文档标题、章节名、标签等知识库元信息
+4. **转述原则**：将知识库内容消化后用自己的话通俗表达
+5. **违者处罚**：如果回答中包含原文片段、术语或来源信息，将受到惩罚
+
+> 好回答示例："你可以试试先问客户目前是怎么做的，再问他们对现状哪里不满意。"
+> 坏回答示例："根据SPIN方法论中的Situation Question，你应该提出情境问题..."
+`;
 
 /**
  * 销售专家 Agent 基类
@@ -32,28 +43,37 @@ import { app } from '../config/index.js';
 export default class BaseAgent {
   /**
    * @param {Object} options
-   * @param {string} options.name - Agent 标识（英文，如 'sales_coach'）
-   * @param {string} options.label - Agent 显示名称（中文，如 '销售教练'）
-   * @param {string} options.description - Agent 职责描述
-   * @param {string} options.collectionName - 对应的 Qdrant Collection 名称
+   * @param {string} options.name - Agent 标识
+   * @param {string} options.label - 显示名称
+   * @param {string} options.description - 职责描述
+   * @param {string} options.collectionName - 知识库 Collection 名
    * @param {string} options.systemPrompt - System Prompt 模板
-   * @param {number} [options.topK=5] - 知识库检索数量
+   * @param {number} [options.topK=5] - 检索数量
    */
   constructor(options) {
     this.name = options.name;
     this.label = options.label;
     this.description = options.description;
     this.collectionName = options.collectionName;
-    this.systemPrompt = options.systemPrompt;
+    this.basePrompt = options.systemPrompt;
     this.topK = options.topK ?? 5;
     this.llm = createDeepSeekChat({ streaming: false });
   }
 
   /**
-   * 从知识库检索相关内容（由 Agent 子类执行时调用）
-   * @param {string} query - 检索查询
-   * @param {number} [topK] - 覆盖默认数量
-   * @returns {Promise<Array>} 检索结果
+   * 获取最终的 system prompt（= Agent 自定义 prompt + 全局规则）
+   */
+  getSystemPrompt(userContext) {
+    const base = this.basePrompt
+      .replace(/\{industry\}/g, userContext?.industry || '')
+      .replace(/\{role\}/g, userContext?.role || '')
+      .replace(/\{scenario\}/g, userContext?.scenario || '');
+
+    return base + COMMON_RESPONSE_RULES;
+  }
+
+  /**
+   * 从知识库检索
    */
   async retrieveKnowledge(query, topK) {
     try {
@@ -72,39 +92,19 @@ export default class BaseAgent {
   }
 
   /**
-   * 格式化知识库上下文供 LLM 使用
-   * @param {Array} knowledgeResults
-   * @returns {string} 格式化后的知识文本
-   */
-  formatKnowledgeContext(knowledgeResults) {
-    if (!knowledgeResults || knowledgeResults.length === 0) {
-      return '（暂无相关知识库内容）';
-    }
-
-    return knowledgeResults
-      .map(
-        (doc, i) =>
-          `【参考 ${i + 1}】(相关性: ${(doc.score * 100).toFixed(1)}%)\n${doc.content}`
-      )
-      .join('\n\n');
-  }
-
-  /**
-   * 构建完整的 Prompt（System + 知识 + 用户输入）
-   * @param {Object} params
-   * @param {string} params.userInput - 用户输入
-   * @param {Object} params.userContext - 用户上下文
-   * @param {Array} params.knowledgeResults - 检索到的知识
-   * @returns {Array} LangChain 消息数组
+   * 构建 Prompt
+   * 知识库内容只传给 LLM 参考，不在返回中暴露
    */
   buildPrompt({ userInput, userContext, knowledgeResults }) {
-    const knowledgeContext = this.formatKnowledgeContext(knowledgeResults);
+    // 知识库上下文仅注入给 LLM，不在任何格式化输出中出现
+    const knowledgeContext = knowledgeResults.length > 0
+      ? knowledgeResults.map((doc, i) =>
+          `【参考 ${i + 1}】\n${doc.content}`
+        ).join('\n\n')
+      : '（暂无相关知识库内容）';
 
-    const system = this.systemPrompt
-      .replace(/\{knowledge_context\}/g, knowledgeContext)
-      .replace(/\{industry\}/g, userContext?.industry || '未指定')
-      .replace(/\{role\}/g, userContext?.role || '未指定')
-      .replace(/\{scenario\}/g, userContext?.scenario || '未指定');
+    const system = this.getSystemPrompt(userContext)
+      .replace(/\{knowledge_context\}/g, knowledgeContext);
 
     return [
       { role: 'system', content: system },
@@ -113,24 +113,17 @@ export default class BaseAgent {
   }
 
   /**
-   * 执行 Agent 的核心逻辑
-   * @param {string} userInput - 用户输入
-   * @param {AgentContext} context - 执行上下文
-   * @returns {Promise<AgentResult>}
+   * 执行 Agent
+   * @param {string} userInput
+   * @param {Object} context
+   * @returns {Promise<{agentName, label, output, knowledgeRefs, metadata}>}
    */
   async execute(userInput, context = {}) {
     console.log(`[${this.name}] 开始执行...`);
 
-    // 1. 从知识库检索
-    const knowledgeResults = await this.retrieveKnowledge(
-      userInput,
-      this.topK
-    );
-    console.log(
-      `[${this.name}] 检索到 ${knowledgeResults.length} 条相关知识`
-    );
+    const knowledgeResults = await this.retrieveKnowledge(userInput, this.topK);
+    console.log(`[${this.name}] 检索到 ${knowledgeResults.length} 条相关知识`);
 
-    // 2. 构建 Prompt 并调用 LLM
     const prompt = this.buildPrompt({
       userInput,
       userContext: context.userContext || {},
@@ -139,15 +132,15 @@ export default class BaseAgent {
 
     const response = await this.llm.invoke(prompt);
 
-    // 3. 返回结果
+    // 返回时剔除知识库原文内容（只保留标题和相关性分数用于调试）
     return {
       agentName: this.name,
       label: this.label,
       output: response.content,
       knowledgeRefs: knowledgeResults.map((r) => ({
-        source: r.metadata?.title || '未知来源',
+        source: r.metadata?.title || '参考文档',
         score: r.score,
-        content: r.content,
+        // content 已移除：不向客户端暴露知识库原文
       })),
       metadata: {
         collectionName: this.collectionName,

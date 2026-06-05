@@ -367,36 +367,6 @@ body {
   margin-left: auto;
 }
 
-/* Knowledge Refs */
-.knowledge-refs {
-  margin-top: 8px;
-  font-size: 12px;
-}
-
-.knowledge-refs summary {
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.ref-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 8px;
-  border-left: 2px solid var(--primary-light);
-  margin-top: 4px;
-  font-size: 11px;
-}
-
-.ref-source {
-  color: var(--text);
-  font-weight: 500;
-}
-
-.ref-score {
-  color: var(--text-secondary);
-}
-
 /* Markdown in messages */
 .message-content h2 {
   font-size: 16px;

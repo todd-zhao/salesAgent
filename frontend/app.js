@@ -205,7 +205,6 @@ async function sendMessage() {
             agentName: name,
             agentLabel: label,
             agentIcon: icon,
-            knowledgeRefs: output.knowledgeRefs,
           });
         }
       }
@@ -227,16 +226,11 @@ function addMessage(role, content, extra = {}) {
 
   let headerHtml = '';
   if (role === 'agent') {
-    const { agentIcon, agentLabel, knowledgeRefs } = extra;
+    const { agentIcon, agentLabel } = extra;
     headerHtml = `
       <div class="message-agent-header">
         <span class="agent-icon">${agentIcon || DEFAULT_ICON}</span>
         <span class="agent-label">${agentLabel || '专家'}</span>
-        ${
-          knowledgeRefs && knowledgeRefs.length > 0
-            ? `<span class="knowledge-badge">📚 ${knowledgeRefs.length} 条知识引用</span>`
-            : ''
-        }
       </div>
     `;
   }
@@ -244,22 +238,6 @@ function addMessage(role, content, extra = {}) {
   div.innerHTML = `
     ${headerHtml}
     <div class="message-content">${formatContent(content)}</div>
-    ${
-      extra.knowledgeRefs && extra.knowledgeRefs.length > 0
-        ? `<details class="knowledge-refs">
-            <summary>查看知识来源 (${extra.knowledgeRefs.length})</summary>
-            ${extra.knowledgeRefs
-              .map(
-                (ref, i) =>
-                  `<div class="ref-item">
-                    <span class="ref-source">${ref.source}</span>
-                    <span class="ref-score">相关性: ${(ref.score * 100).toFixed(0)}%</span>
-                  </div>`
-              )
-              .join('')}
-          </details>`
-        : ''
-    }
   `;
 
   messagesEl.appendChild(div);
