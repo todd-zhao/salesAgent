@@ -8,7 +8,9 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "seed": "node scripts/seed-knowledge.js",
-    "import-md": "node scripts/import-markdown.js"
+    "import-md": "node scripts/import-markdown.js",
+    "import-md:bigmem": "node --max-old-space-size=8192 --expose-gc scripts/import-markdown.js",
+    "start:bigmem": "node --max-old-space-size=4096 src/index.js"
   },
   "keywords": [
     "sales",
