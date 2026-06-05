@@ -73,22 +73,39 @@ function parseFrontmatter(content) {
 // ---- 文本分块 ----
 function chunkText(text, maxSize, overlap) {
   if (text.length <= maxSize) return [text];
+
   const chunks = [];
   let start = 0;
-  while (start < text.length) {
+  let maxIter = 10000; // 安全阀：防止意外死循环
+
+  while (start < text.length && maxIter-- > 0) {
     let end = Math.min(start + maxSize, text.length);
+
+    // 只在非末尾块尝试在段落/句子边界截断
     if (end < text.length) {
       const pEnd = text.lastIndexOf('\n\n', end);
-      if (pEnd > start + maxSize * 0.5) end = pEnd;
-      else {
+      if (pEnd > start + maxSize * 0.5) {
+        end = pEnd;
+      } else {
         const sEnd = text.lastIndexOf('。', end);
-        if (sEnd > start + maxSize * 0.5) end = sEnd + 1;
+        if (sEnd > start + maxSize * 0.5) {
+          end = sEnd + 1;
+        }
       }
     }
+
     const chunk = text.slice(start, end).trim();
     if (chunk.length > 50) chunks.push(chunk);
+
+    // 如果是最后一块，结束循环（避免 overlap 导致死循环）
+    if (end === text.length) break;
+
+    // 向前移动，携带 overlap 字符作为上下文重叠
     start = end - overlap;
+    // 防止 start 回退到上次起点之前（边界安全）
+    if (start < 0) start = 0;
   }
+
   return chunks;
 }
 
