@@ -468,7 +468,53 @@ const embeddings = new OpenAIEmbeddings({
 
 ---
 
-## 7. 项目目录结构
+## 7. Markdown 知识库导入
+
+系统内置批量导入工具 `scripts/import-markdown.js`，支持将 Markdown 文档直接导入对应的专家知识库。
+
+### 目录组织
+
+```
+data/markdown/
+  sales_coach_knowledge/       # 知识库名 = 目录名
+    SPIN销售法.md              # 文件内容自动向量化
+    解决方案销售.md
+  question_design_knowledge/
+    漏斗式提问法.md
+  ...
+```
+
+### 文件格式
+
+支持 YAML frontmatter 添加元数据：
+
+```markdown
+---
+title: SPIN 销售法
+tags: [SPIN, 需求挖掘]
+scenarios: [初次拜访, 需求调研]
+---
+
+正文内容...
+```
+
+### 自动分块
+
+长篇文档自动按段落边界分块（默认 2000 字），每块独立向量化，检索时能命中精确片段。
+
+### 使用方式
+
+```bash
+# 自动扫描 data/markdown/
+npm run import-md
+
+# 或指定目录和知识库
+node scripts/import-markdown.js --dir ./我的文档 --collection sales_coach_knowledge
+```
+
+---
+
+## 8. 项目目录结构
 
 ```
 sales-agent/
@@ -531,7 +577,7 @@ sales-agent/
 
 ---
 
-## 8. 通信与数据流
+## 9. 通信与数据流
 
 ### 8.1 API 端点
 
@@ -563,7 +609,7 @@ data: {"final_output": "..."}
 
 ---
 
-## 9. 协作模式
+## 10. 协作模式
 
 ### 9.1 单专家模式（默认）
 用户明确或系统自动判断只用一位专家，直接路由。
@@ -594,7 +640,7 @@ data: {"final_output": "..."}
 
 ---
 
-## 10. 开发路线图
+## 11. 开发路线图
 
 | 阶段 | 内容 |
 |------|------|
@@ -608,7 +654,7 @@ data: {"final_output": "..."}
 
 ---
 
-## 11. 运行环境
+## 12. 运行环境
 
 | 依赖 | 要求 | 说明 |
 |------|------|------|
@@ -627,7 +673,7 @@ NODE_ENV=development
 
 ---
 
-## 12. 扩展性设计
+## 13. 扩展性设计
 
 | 维度 | 方案 |
 |------|------|

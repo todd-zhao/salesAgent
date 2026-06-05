@@ -83,6 +83,58 @@ npm run seed
 }
 ```
 
+## 📥 批量导入 Markdown 文档
+
+### 方式一：按知识库目录存放
+
+将 .md 文件按专家知识库名放入子目录：
+
+```
+data/markdown/
+  sales_coach_knowledge/
+    SPIN销售法.md
+    解决方案销售.md
+  question_design_knowledge/
+    漏斗式提问法.md
+  story_creation_knowledge/
+    客户成功案例.md
+```
+
+然后运行：
+
+```bash
+npm run import-md
+```
+
+### 方式二：指定目录和知识库
+
+```bash
+node scripts/import-markdown.js --dir ./我的文档 --collection sales_coach_knowledge
+```
+
+### Markdown 文件支持 YAML Frontmatter
+
+文件头部可加入元数据信息：
+
+```markdown
+---
+title: SPIN 销售法详解
+category: methodology
+tags: [SPIN, 需求挖掘, B2B]
+source: Huthwaite
+difficulty: intermediate
+scenarios: [初次拜访, 需求调研]
+---
+
+文档正文内容...
+```
+
+### 导入规则
+
+- 长文档会自动分块（默认每块 ~2000 字），保持段落完整性
+- 每个块独立向量化，检索时能找到文档的精确片段
+- 数据持久化到 `data/vectorstore/`，重启不丢失
+
 ## 🔧 API
 
 ### POST /api/chat — 自动路由

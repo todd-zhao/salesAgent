@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "seed": "node scripts/seed-knowledge.js"
+    "seed": "node scripts/seed-knowledge.js",
+    "import-md": "node scripts/import-markdown.js"
   },
   "keywords": [
     "sales",
