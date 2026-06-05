@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>销售专家团</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 侧边栏 -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h1>🧠 销售专家团</h1>
+        <p class="subtitle">14 位销售专家 · 随叫随到</p>
+      </div>
+
+      <div class="expert-list">
+        <div class="expert-list-title">选择专家</div>
+        <div id="expert-buttons">
+          <!-- 由 JS 动态生成 -->
+        </div>
+        <button id="auto-route-btn" class="auto-route-btn active">
+          🤖 智能路由（自动匹配）
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="context-input">
+          <input type="text" id="industry-input" placeholder="行业（可选）" />
+          <input type="text" id="role-input" placeholder="你的角色（可选）" />
+          <input type="text" id="scenario-input" placeholder="场景描述（可选）" />
+        </div>
+        <p class="powered">Powered by DeepSeek-V4-Flash + Qdrant</p>
+      </div>
+    </aside>
+
+    <!-- 主区域 -->
+    <main id="main">
+      <!-- 聊天头部 -->
+      <header id="chat-header">
+        <div id="current-expert-display">
+          <span id="expert-icon">🤖</span>
+          <span id="expert-name">智能路由</span>
+        </div>
+        <div id="token-count" class="hidden">
+          <span id="expert-list-display"></span>
+        </div>
+      </header>
+
+      <!-- 消息列表 -->
+      <div id="messages">
+        <div class="welcome-message">
+          <div class="welcome-icon">👋</div>
+          <h2>欢迎来到销售专家团</h2>
+          <p>我是您的智能路由助手。请告诉我您的需求，我会自动匹配最合适的销售专家为您服务。</p>
+          <p>您也可以从左侧直接选择特定专家进行咨询。</p>
+          <div class="example-questions">
+            <p><strong>试试这样问：</strong></p>
+            <button class="example-btn" data-msg="请帮我分析这段销售对话中的问题：客户说'我们再考虑考虑'，销售回答'好的，那您考虑好了随时联系我'">
+              🎯 分析销售对话
+            </button>
+            <button class="example-btn" data-msg="我们是一家SaaS公司，需要设计一套新人销售入职培训方案">
+              🚀 设计培训方案
+            </button>
+            <button class="example-btn" data-msg="请为我们的大客户销售岗位设计人才画像">
+              👤 设计人才画像
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输入区 -->
+      <div id="input-area">
+        <div id="agent-thinking" class="hidden">
+          <div class="thinking-indicator">
+            <span class="thinking-dot"></span>
+            <span class="thinking-dot"></span>
+            <span class="thinking-dot"></span>
+            <span id="thinking-text">专家思考中...</span>
+          </div>
+        </div>
+        <div class="input-row">
+          <textarea
+            id="message-input"
+            placeholder="请输入您的销售问题..."
+            rows="2"
+          ></textarea>
+          <button id="send-btn" title="发送">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

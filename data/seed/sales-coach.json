@@ -1,0 +1,29 @@
+{
+  "collection": "sales_coach_knowledge",
+  "documents": [
+    {
+      "id": "coach-001",
+      "content": "## SPIN 销售法\n\nSPIN 是由 Huthwaite 公司通过分析35000个销售电话总结出的需求挖掘框架：\n- **S (Situation) 情境问题**: 询问客户现状事实（如\"贵公司目前使用什么系统？\"）\n- **P (Problem) 难点问题**: 发现客户的问题和不满（如\"现有系统在哪些方面不够用？\"）\n- **I (Implication) 暗示问题**: 放大问题的影响（如\"这个问题对您的业务效率有多大影响？\"）\n- **N (Need-payoff) 需求-效益问题**: 引导客户看到解决方案的价值（如\"如果这个问题解决了，会带来什么改善？\"）\n\n适用场景：大客户销售、复杂解决方案销售、B2B销售",
+      "metadata": {
+        "title": "SPIN 销售法",
+        "category": "methodology",
+        "tags": ["SPIN", "需求挖掘", "B2B"],
+        "source": "Huthwaite, 'SPIN Selling'",
+        "difficulty": "intermediate",
+        "scenarios": ["需求调研", "初次拜访", "大客户销售"]
+      }
+    },
+    {
+      "id": "coach-002",
+      "content": "## Challenger Sale 挑战式销售\n\nMatthew Dixon 和 Brent Adamson 在 CEB 的研究中发现，成功的销售代表分为五种类型，其中 Challenger（挑战者）表现最为突出。\n\n核心理念：\n1. **教导 (Teach)**: 教客户一些他们不知道的东西，挑战其固有认知\n2. **量体裁衣 (Tailor)**: 根据客户的具体情况调整信息\n3. **掌控 (Take Control)**: 敢于推进销售过程，不被客户牵着走\n\n挑战者的三个关键能力：\n- 商业洞察力：能帮助客户看到自己没有意识到的风险和机会\n- 建设性张力：敢于提出尖锐问题，推动客户思考\n- 个性化适配：针对不同决策者调整沟通方式",
+      "metadata": {
+        "title": "Challenger Sale 挑战式销售",
+        "category": "methodology",
+        "tags": ["Challenger", "商业洞察", "销售技巧"],
+        "source": "CEB, 'The Challenger Sale'",
+        "difficulty": "advanced",
+        "scenarios": ["大客户销售", "复杂销售", "竞争性销售"]
+      }
+    }
+  ]
+}
