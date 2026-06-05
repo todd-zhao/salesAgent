@@ -9,9 +9,6 @@ yarn-error.log*
 .env.local
 .env.*.local
 
-# 向量数据（运行时生成，按需提交）
-data/vectorstore/
-
 # IDE
 .vscode/
 .idea/
